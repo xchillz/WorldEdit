@@ -35,6 +35,11 @@ final class Position
         return $this->z;
     }
 
+    public function toKey(): string
+    {
+        return $this->x . ':' . $this->y . ':' . $this->z;
+    }
+
     public function equals(Position $position): bool
     {
         return $position->getX() === $this->x && $position->getY() === $this->y && $position->getZ() === $this->z;
