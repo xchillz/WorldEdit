@@ -1,0 +1,6 @@
+name: 'WorldEdit'
+description: 'Un plugin que te permite editar tus mundos con mayor facilidad'
+author: 'xChillz'
+main: 'worldedit\xchillz\WorldEditPlugin'
+version: '1.0.0'
+api: '2.0.0'
