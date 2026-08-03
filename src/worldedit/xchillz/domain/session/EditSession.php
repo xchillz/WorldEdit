@@ -29,6 +29,11 @@ final class EditSession
         $this->historyPointer = -1;
     }
 
+    public function getPlayerName(): string
+    {
+        return $this->playerName;
+    }
+
     public function getSelection(): Selection
     {
         return $this->selection;
