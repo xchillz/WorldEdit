@@ -10,8 +10,10 @@ final class BlockOperation
 {
     /** @var Uuid */
     private $uuid;
-    /** @var \SplQueue */
-    private $pendingChanges;
+    /** @var \Generator */
+    private $pendingSource;
+    /** @var int */
+    private $totalCount;
     /** @var BlockChange[] */
     private $appliedChanges;
     /** @var int */
@@ -21,82 +23,57 @@ final class BlockOperation
     /** @var string */
     private $worldName;
 
-    public function __construct(BatchConfig $batchConfig, string $worldName)
+    public function __construct(BatchConfig $batchConfig, string $worldName, \Generator $pendingSource, int $totalCount)
     {
         $this->uuid = Uuid::generate();
-        $this->pendingChanges = new \SplQueue();
+        $this->pendingSource = $pendingSource;
+        $this->totalCount = $totalCount;
         $this->appliedChanges = [];
         $this->status = OperationStatus::PENDING;
         $this->batchConfig = $batchConfig;
         $this->worldName = $worldName;
     }
 
-    public function enqueue(BlockChange $blockChange)
-    {
-        $this->pendingChanges->enqueue($blockChange);
-    }
-
     /**
-     * @param iterable $blockChanges
+     * @return BlockChange[]
      */
-    public function enqueueAll($blockChanges)
-    {
-        foreach ($blockChanges as $blockChange) {
-            $this->enqueue($blockChange);
-        }
-    }
-
     public function nextBatch(): array
     {
         $batchSize = $this->batchConfig->getSize();
-        $appliedChanges = [];
+        $batch = [];
 
         for ($i = 0; $i < $batchSize; $i++) {
-            if ($this->pendingChanges->isEmpty()) {
+            if (!$this->pendingSource->valid()) {
                 break;
             }
-            $blockChange = $this->pendingChanges->dequeue();
-            $appliedChanges[] = $blockChange;
-            $this->appliedChanges[] = $blockChange;
+            $batch[] = $this->pendingSource->current();
+            $this->pendingSource->next();
         }
 
-        return $appliedChanges;
+        return $batch;
+    }
+
+    public function recordApplied(BlockChange $change)
+    {
+        $this->appliedChanges[] = $change;
     }
 
     public function isComplete(): bool
     {
-        return $this->pendingChanges->isEmpty();
+        return !$this->pendingSource->valid();
     }
 
     public function getProgress(): float
     {
-        $total = count($this->appliedChanges) + $this->pendingChanges->count();
-
-        if ($total === 0) {
-            return 0.0;
+        if ($this->totalCount === 0) {
+            return 1.0;
         }
-
-        return count($this->appliedChanges) / $total;
-    }
-
-    public function getAppliedChanges(): array
-    {
-        return $this->appliedChanges;
-    }
-
-    public function markStatus(int $status)
-    {
-        $this->status = $status;
+        return count($this->appliedChanges) / $this->totalCount;
     }
 
     public function getId(): Uuid
     {
         return $this->uuid;
-    }
-
-    public function getStatus(): int
-    {
-        return $this->status;
     }
 
     public function getWorldName(): string
@@ -107,5 +84,15 @@ final class BlockOperation
     public function getBatchConfig(): BatchConfig
     {
         return $this->batchConfig;
+    }
+
+    public function getAppliedChanges(): array
+    {
+        return $this->appliedChanges;
+    }
+
+    public function markStatus(int $status)
+    {
+        $this->status = $status;
     }
 }

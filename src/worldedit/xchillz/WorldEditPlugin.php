@@ -27,7 +27,7 @@ final class WorldEditPlugin extends PluginBase
         $worldAdapter = new PmmpLevelAdapter($this->getServer());
         $notifier = new PmmpProgressNotifier($this->getServer());
 
-        $scheduler = new PmmpTaskScheduler($this, $worldAdapter, $notifier);
+        $scheduler = new PmmpTaskScheduler($this, $worldAdapter, $worldAdapter, $notifier);
 
         $batchExecutionService = new BatchExecutionService($scheduler);
 

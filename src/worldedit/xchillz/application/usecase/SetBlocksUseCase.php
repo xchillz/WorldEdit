@@ -7,8 +7,8 @@ namespace worldedit\xchillz\application\usecase;
 use worldedit\xchillz\application\port\WorldReader;
 use worldedit\xchillz\application\service\BatchExecutionService;
 use worldedit\xchillz\domain\operation\BatchConfig;
-use worldedit\xchillz\domain\operation\BlockChange;
 use worldedit\xchillz\domain\operation\BlockOperation;
+use worldedit\xchillz\domain\operation\ShapeChangeSource;
 use worldedit\xchillz\domain\selection\ShapeFactory;
 use worldedit\xchillz\domain\selection\ShapeType;
 use worldedit\xchillz\domain\session\SessionRepository;
@@ -47,21 +47,8 @@ final class SetBlocksUseCase
             $session->getSelection()->getSecondPosition()
         );
 
-        if ($shape->getBlockCount() > self::MAX_BLOCK_COUNT) {
-            throw new \Exception("Selection too large");
-        }
-
-        $operation = new BlockOperation(new BatchConfig($batchSize), $worldName);
-
-        foreach ($shape->getBoundingBox()->each() as $pos) {
-            if (!$shape->contains($pos)) {
-                continue;
-            }
-
-            $previous = $this->worldReader->getBlockAt($worldName, $pos);
-
-            $operation->enqueue(new BlockChange($pos, $blockId, $blockMeta, $previous));
-        }
+        $source = ShapeChangeSource::fromShape($shape, $blockId, $blockMeta);
+        $operation = new BlockOperation(new BatchConfig($batchSize), $worldName, $source, $shape->getBlockCount());
 
         $this->batchExecutionService->start($operation, $playerName);
         $session->pushHistory($operation);
