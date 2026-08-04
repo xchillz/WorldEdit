@@ -6,9 +6,9 @@ namespace worldedit\xchillz\domain\operation;
 
 final class BatchConfig
 {
-    const DEFAULT_SIZE = 50;
-    const MIN_BATCH_SIZE = 25;
-    const MAX_BATCH_SIZE = 200;
+    const DEFAULT_SIZE = 100;
+    const MIN_BATCH_SIZE = 100;
+    const MAX_BATCH_SIZE = 500;
 
     /** @var int */
     private $size;
