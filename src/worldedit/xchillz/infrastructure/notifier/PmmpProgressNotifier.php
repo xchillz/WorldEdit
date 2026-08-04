@@ -27,10 +27,10 @@ final class PmmpProgressNotifier implements ProgressNotifier
 
         $player->sendPopup(
             TextFormat::GREEN .
-                ": " .
+                "Progress: " .
                 TextFormat::WHITE .
                 round($progress * 100) .
-                "%"
+                " percent"
         );
     }
 
